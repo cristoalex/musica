@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reproductor de Música en Tiempo Real</title>
+</head>
+<body>
+  <h1>Reproductor de Música</h1>
+  <audio id="audioPlayer" controls></audio>
+  <button id="playButton">Play</button>
+  <button id="pauseButton">Pause</button>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const audioPlayer = document.getElementById('audioPlayer');
+    let isHost = true; // Cambiar a false para oyentes.
+
+    socket.on('update', ({ currentSong, currentTime, isPlaying }) => {
+      if (currentSong) {
+        audioPlayer.src = `/song/${currentSong}`;
+        audioPlayer.currentTime = currentTime;
+        if (isPlaying) audioPlayer.play();
+        else audioPlayer.pause();
+      }
+    });
+
+    document.getElementById('playButton').addEventListener('click', () => {
+      if (isHost) {
+        const song = 'example.mp3'; // Cambiar por el archivo subido.
+        socket.emit('play', { song });
+      }
+    });
+
+    document.getElementById('pauseButton').addEventListener('click', () => {
+      if (isHost) socket.emit('pause');
+    });
+
+    audioPlayer.addEventListener('timeupdate', () => {
+      if (isHost) socket.emit('sync', audioPlayer.currentTime);
+    });
+  </script>
+</body>
+</html>
